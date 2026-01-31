@@ -32,41 +32,43 @@ License: MIT
 
 import time
 import uuid
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
 
 # Dual import pattern supports both package and direct execution modes:
 #   - Package: `python -m uvicorn src.main:app` (uses relative imports)
 #   - Direct:  `python src/main.py` (uses absolute imports for debugging)
+# mypy: disable-error-code="no-redef"
 try:
     from .config import get_settings
-    from .vllm_client import VLLMClient
     from .models import (
         ChatCompletionRequest,
         ChatCompletionResponse,
-        UsageInfo,
         Choice,
         Message,
+        UsageInfo,
     )
+    from .vllm_client import VLLMClient
 except ImportError:
     from config import get_settings
-    from vllm_client import VLLMClient
     from models import (
         ChatCompletionRequest,
         ChatCompletionResponse,
-        UsageInfo,
         Choice,
         Message,
+        UsageInfo,
     )
+    from vllm_client import VLLMClient
 
 
 # =============================================================================
 # Application Lifespan Management
 # =============================================================================
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -138,6 +140,7 @@ app.add_middleware(
 # Health & Metadata Endpoints
 # =============================================================================
 
+
 @app.get("/health", tags=["Health"])
 async def health_check():
     """
@@ -168,9 +171,7 @@ async def health_check():
 
     # Calculate error rate, avoiding division by zero
     error_rate = (
-        app.state.error_count / app.state.request_count
-        if app.state.request_count > 0
-        else 0.0
+        app.state.error_count / app.state.request_count if app.state.request_count > 0 else 0.0
     )
 
     return {
@@ -235,6 +236,7 @@ async def list_models():
 # =============================================================================
 # Chat Completions API
 # =============================================================================
+
 
 @app.post("/api/v1/chat/completions", tags=["Chat"])
 async def chat_completions(request: ChatCompletionRequest):
@@ -392,7 +394,8 @@ async def stream_chat_completion(
                 }
             ],
         }
-        yield f"data: {JSONResponse(content=data).body.decode()}\n\n"
+        json_body = JSONResponse(content=data).body
+        yield f"data: {json_body.decode() if isinstance(json_body, bytes) else json_body}\n\n"
 
         # Emit keep-alive comment to prevent proxy timeouts
         # vLLM client emits keep_alive=True periodically during long inference
@@ -406,6 +409,7 @@ async def stream_chat_completion(
 # =============================================================================
 # Error Handlers
 # =============================================================================
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):

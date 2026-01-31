@@ -2,8 +2,9 @@
 Tests for chat completions endpoint.
 """
 
-import pytest
 import json
+
+import pytest
 
 
 class TestChatCompletionsNonStreaming:
@@ -136,7 +137,7 @@ class TestChatCompletionsStreaming:
         )
 
         content = response.text
-        lines = [l for l in content.split("\n") if l.startswith("data: ")]
+        lines = [line for line in content.split("\n") if line.startswith("data: ")]
 
         # Should have at least one data line
         assert len(lines) > 0

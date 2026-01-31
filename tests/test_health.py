@@ -2,8 +2,6 @@
 Tests for health check and metadata endpoints.
 """
 
-import pytest
-
 
 class TestHealthEndpoint:
     """Tests for /health endpoint."""

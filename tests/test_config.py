@@ -2,11 +2,10 @@
 Tests for configuration management.
 """
 
-import pytest
 import os
+import sys
 from unittest.mock import patch
 
-import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from config import Settings, get_settings
@@ -77,10 +76,13 @@ class TestSettingsEnvironment:
 
     def test_env_overrides_pricing(self):
         """Pricing env vars should override defaults."""
-        with patch.dict(os.environ, {
-            "PRICE_PER_PROMPT_TOKEN": "0.00001",
-            "PRICE_PER_COMPLETION_TOKEN": "0.00003",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "PRICE_PER_PROMPT_TOKEN": "0.00001",
+                "PRICE_PER_COMPLETION_TOKEN": "0.00003",
+            },
+        ):
             settings = Settings()
             assert settings.price_per_prompt_token == "0.00001"
             assert settings.price_per_completion_token == "0.00003"

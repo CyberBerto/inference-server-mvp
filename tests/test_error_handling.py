@@ -6,13 +6,12 @@ to OpenAI error response schema, and that appropriate HTTP status codes
 are returned.
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from fastapi.testclient import TestClient
-import httpx
-
-import sys
 import os
+import sys
+
+import httpx
+import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
@@ -37,9 +36,7 @@ class TestErrorResponseFormat:
     def test_missing_required_field_error(self, client):
         """Missing required fields should return 422."""
         # Missing 'model' field
-        request = {
-            "messages": [{"role": "user", "content": "test"}]
-        }
+        request = {"messages": [{"role": "user", "content": "test"}]}
         response = client.post("/api/v1/chat/completions", json=request)
 
         assert response.status_code == 422
@@ -51,7 +48,7 @@ class TestErrorResponseFormat:
         response = client.post(
             "/api/v1/chat/completions",
             content="not valid json",
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
 
         assert response.status_code == 422
@@ -64,6 +61,7 @@ class TestVLLMClientErrorHandling:
     def real_client(self):
         """Create a real VLLMClient for testing."""
         from vllm_client import VLLMClient
+
         return VLLMClient(base_url="http://localhost:9999")  # Non-existent
 
     @pytest.mark.asyncio
@@ -85,10 +83,7 @@ class TestVLLMClientErrorHandling:
     async def test_generate_connection_error(self, real_client):
         """Generate should raise on connection error."""
         with pytest.raises(httpx.ConnectError):
-            await real_client.generate(
-                messages=[{"role": "user", "content": "test"}],
-                model="test"
-            )
+            await real_client.generate(messages=[{"role": "user", "content": "test"}], model="test")
 
 
 class TestHealthEndpointEdgeCases:
@@ -120,10 +115,7 @@ class TestChatCompletionsEdgeCases:
 
     def test_empty_content_message(self, client):
         """Message with empty content should be accepted."""
-        request = {
-            "model": "test-model",
-            "messages": [{"role": "user", "content": ""}]
-        }
+        request = {"model": "test-model", "messages": [{"role": "user", "content": ""}]}
         response = client.post("/api/v1/chat/completions", json=request)
         # Should succeed (vLLM will handle empty content)
         assert response.status_code == 200
@@ -131,10 +123,7 @@ class TestChatCompletionsEdgeCases:
     def test_very_long_message(self, client):
         """Very long messages should be accepted (up to vLLM limits)."""
         long_content = "a" * 10000
-        request = {
-            "model": "test-model",
-            "messages": [{"role": "user", "content": long_content}]
-        }
+        request = {"model": "test-model", "messages": [{"role": "user", "content": long_content}]}
         response = client.post("/api/v1/chat/completions", json=request)
         assert response.status_code == 200
 
@@ -147,7 +136,7 @@ class TestChatCompletionsEdgeCases:
                 {"role": "user", "content": "Hello"},
                 {"role": "assistant", "content": "Hi there!"},
                 {"role": "user", "content": "How are you?"},
-            ]
+            ],
         }
         response = client.post("/api/v1/chat/completions", json=request)
         assert response.status_code == 200
@@ -156,7 +145,7 @@ class TestChatCompletionsEdgeCases:
         """Unicode content should be handled correctly."""
         request = {
             "model": "test-model",
-            "messages": [{"role": "user", "content": "Hello! 你好 🌍 مرحبا"}]
+            "messages": [{"role": "user", "content": "Hello! 你好 🌍 مرحبا"}],
         }
         response = client.post("/api/v1/chat/completions", json=request)
         assert response.status_code == 200
@@ -169,7 +158,7 @@ class TestChatCompletionsEdgeCases:
         """Special characters should not break parsing."""
         request = {
             "model": "test-model",
-            "messages": [{"role": "user", "content": 'Test with "quotes" and \\n newlines'}]
+            "messages": [{"role": "user", "content": 'Test with "quotes" and \\n newlines'}],
         }
         response = client.post("/api/v1/chat/completions", json=request)
         assert response.status_code == 200
@@ -177,22 +166,14 @@ class TestChatCompletionsEdgeCases:
     def test_max_tokens_boundary(self, client, sample_messages):
         """Boundary values for max_tokens should work."""
         # Minimum valid value
-        request = {
-            "model": "test-model",
-            "messages": sample_messages,
-            "max_tokens": 1
-        }
+        request = {"model": "test-model", "messages": sample_messages, "max_tokens": 1}
         response = client.post("/api/v1/chat/completions", json=request)
         assert response.status_code == 200
 
     def test_temperature_boundary(self, client, sample_messages):
         """Boundary values for temperature should work."""
         # Minimum
-        request = {
-            "model": "test-model",
-            "messages": sample_messages,
-            "temperature": 0.0
-        }
+        request = {"model": "test-model", "messages": sample_messages, "temperature": 0.0}
         response = client.post("/api/v1/chat/completions", json=request)
         assert response.status_code == 200
 

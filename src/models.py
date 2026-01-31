@@ -27,13 +27,14 @@ Version: 0.3.0
 License: MIT
 """
 
-from typing import List, Optional, Dict, Any, Union, Literal
-from pydantic import BaseModel, Field
+from typing import Any, Literal
 
+from pydantic import BaseModel, Field
 
 # =============================================================================
 # Request Models
 # =============================================================================
+
 
 class Message(BaseModel):
     """
@@ -62,11 +63,12 @@ class Message(BaseModel):
         Tool response:
             {"role": "tool", "tool_call_id": "call_1", "content": "72°F"}
     """
+
     role: Literal["system", "user", "assistant", "tool"]
-    content: Optional[str] = None
-    name: Optional[str] = None
-    tool_calls: Optional[List[Dict[str, Any]]] = None
-    tool_call_id: Optional[str] = None
+    content: str | None = None
+    name: str | None = None
+    tool_calls: list[dict[str, Any]] | None = None
+    tool_call_id: str | None = None
 
 
 class ToolFunction(BaseModel):
@@ -94,9 +96,10 @@ class ToolFunction(BaseModel):
             }
         }
     """
+
     name: str
-    description: Optional[str] = None
-    parameters: Optional[Dict[str, Any]] = None
+    description: str | None = None
+    parameters: dict[str, Any] | None = None
 
 
 class Tool(BaseModel):
@@ -110,6 +113,7 @@ class Tool(BaseModel):
         type: Tool type, currently always "function"
         function: The function definition
     """
+
     type: Literal["function"] = "function"
     function: ToolFunction
 
@@ -128,6 +132,7 @@ class ResponseFormat(BaseModel):
         When using json_object, you MUST also instruct the model to
         produce JSON in your system/user message, or it may loop.
     """
+
     type: Literal["text", "json_object"] = "text"
 
 
@@ -187,64 +192,47 @@ class ChatCompletionRequest(BaseModel):
             "stream": false
         }
     """
+
     # Required fields
     model: str
-    messages: List[Message]
+    messages: list[Message]
 
     # Generation parameters with validation
-    max_tokens: Optional[int] = Field(
-        default=4096,
-        ge=1,
-        le=131072,
-        description="Maximum tokens to generate"
+    max_tokens: int | None = Field(
+        default=4096, ge=1, le=131072, description="Maximum tokens to generate"
     )
-    temperature: Optional[float] = Field(
+    temperature: float | None = Field(
         default=0.7,
         ge=0.0,
         le=2.0,
-        description="Sampling temperature (0=deterministic, 2=max random)"
+        description="Sampling temperature (0=deterministic, 2=max random)",
     )
-    top_p: Optional[float] = Field(
-        default=1.0,
-        ge=0.0,
-        le=1.0,
-        description="Nucleus sampling probability threshold"
+    top_p: float | None = Field(
+        default=1.0, ge=0.0, le=1.0, description="Nucleus sampling probability threshold"
     )
-    top_k: Optional[int] = Field(
-        default=None,
-        ge=1,
-        description="Top-k sampling (vLLM extension)"
+    top_k: int | None = Field(default=None, ge=1, description="Top-k sampling (vLLM extension)")
+    frequency_penalty: float | None = Field(
+        default=0.0, ge=-2.0, le=2.0, description="Penalize tokens by their frequency"
     )
-    frequency_penalty: Optional[float] = Field(
-        default=0.0,
-        ge=-2.0,
-        le=2.0,
-        description="Penalize tokens by their frequency"
+    presence_penalty: float | None = Field(
+        default=0.0, ge=-2.0, le=2.0, description="Penalize tokens that have appeared"
     )
-    presence_penalty: Optional[float] = Field(
-        default=0.0,
-        ge=-2.0,
-        le=2.0,
-        description="Penalize tokens that have appeared"
-    )
-    repetition_penalty: Optional[float] = Field(
-        default=1.0,
-        ge=0.0,
-        description="vLLM repetition penalty (1.0 = no penalty)"
+    repetition_penalty: float | None = Field(
+        default=1.0, ge=0.0, description="vLLM repetition penalty (1.0 = no penalty)"
     )
 
     # Control parameters
-    stop: Optional[Union[str, List[str]]] = None
+    stop: str | list[str] | None = None
     """Stop sequences - can be a single string or list of strings."""
 
-    stream: Optional[bool] = False
+    stream: bool | None = False
     """Enable Server-Sent Events streaming response."""
 
     # Tool/function calling
-    tools: Optional[List[Tool]] = None
+    tools: list[Tool] | None = None
     """List of tools available for the model to call."""
 
-    tool_choice: Optional[Union[str, Dict[str, Any]]] = None
+    tool_choice: str | dict[str, Any] | None = None
     """
     Control tool selection behavior:
     - "auto": Model decides whether to call tools
@@ -253,27 +241,28 @@ class ChatCompletionRequest(BaseModel):
     """
 
     # Response format
-    response_format: Optional[ResponseFormat] = None
+    response_format: ResponseFormat | None = None
     """Request structured JSON output."""
 
     # Metadata
-    user: Optional[str] = None
+    user: str | None = None
     """Unique identifier for end-user, used for abuse monitoring."""
 
     # vLLM-specific extensions
-    best_of: Optional[int] = None
+    best_of: int | None = None
     """Generate n completions and return the best one (expensive!)."""
 
-    use_beam_search: Optional[bool] = False
+    use_beam_search: bool | None = False
     """Use beam search decoding instead of sampling."""
 
-    skip_special_tokens: Optional[bool] = True
+    skip_special_tokens: bool | None = True
     """Remove special tokens from output."""
 
 
 # =============================================================================
 # Response Models
 # =============================================================================
+
 
 class UsageInfo(BaseModel):
     """
@@ -288,6 +277,7 @@ class UsageInfo(BaseModel):
         Token counts are model-specific. The same text may have different
         token counts across different models/tokenizers.
     """
+
     prompt_tokens: int
     completion_tokens: int
     total_tokens: int
@@ -310,10 +300,11 @@ class Choice(BaseModel):
             - "content_filter": Content was filtered
         logprobs: Token log probabilities (if requested)
     """
+
     index: int
     message: Message
-    finish_reason: Optional[str] = None
-    logprobs: Optional[Dict[str, Any]] = None
+    finish_reason: str | None = None
+    logprobs: dict[str, Any] | None = None
 
 
 class ChatCompletionResponse(BaseModel):
@@ -349,18 +340,20 @@ class ChatCompletionResponse(BaseModel):
             }
         }
     """
+
     id: str
     object: Literal["chat.completion"] = "chat.completion"
     created: int
     model: str
-    choices: List[Choice]
-    usage: Optional[UsageInfo] = None
-    system_fingerprint: Optional[str] = None
+    choices: list[Choice]
+    usage: UsageInfo | None = None
+    system_fingerprint: str | None = None
 
 
 # =============================================================================
 # Streaming Response Models
 # =============================================================================
+
 
 class DeltaMessage(BaseModel):
     """
@@ -380,9 +373,10 @@ class DeltaMessage(BaseModel):
         Chunk 3: {"content": " there"}
         Chunk 4: {"content": "!"}
     """
-    role: Optional[str] = None
-    content: Optional[str] = None
-    tool_calls: Optional[List[Dict[str, Any]]] = None
+
+    role: str | None = None
+    content: str | None = None
+    tool_calls: list[dict[str, Any]] | None = None
 
 
 class StreamChoice(BaseModel):
@@ -396,9 +390,10 @@ class StreamChoice(BaseModel):
         delta: Incremental content update
         finish_reason: Only present in final chunk when generation completes
     """
+
     index: int
     delta: DeltaMessage
-    finish_reason: Optional[str] = None
+    finish_reason: str | None = None
 
 
 class ChatCompletionChunk(BaseModel):
@@ -419,16 +414,18 @@ class ChatCompletionChunk(BaseModel):
         data: {"id": "chatcmpl-...", "object": "chat.completion.chunk", ...}
         data: [DONE]
     """
+
     id: str
     object: Literal["chat.completion.chunk"] = "chat.completion.chunk"
     created: int
     model: str
-    choices: List[StreamChoice]
+    choices: list[StreamChoice]
 
 
 # =============================================================================
 # Model Discovery Models (OpenRouter)
 # =============================================================================
+
 
 class ModelPricing(BaseModel):
     """
@@ -444,6 +441,7 @@ class ModelPricing(BaseModel):
         Completion tokens are typically more expensive than prompt tokens
         because generation is more compute-intensive than processing input.
     """
+
     prompt: str
     completion: str
 
@@ -486,6 +484,7 @@ class ModelInfo(BaseModel):
             "supported_features": ["tools", "json_mode", "streaming"]
         }
     """
+
     id: str
     object: str = "model"
     created: int
@@ -494,4 +493,4 @@ class ModelInfo(BaseModel):
     context_length: int
     pricing: ModelPricing
     quantization: str
-    supported_features: List[str]
+    supported_features: list[str]

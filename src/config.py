@@ -29,7 +29,7 @@ License: MIT
 """
 
 from functools import lru_cache
-from typing import List
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -156,7 +156,7 @@ class Settings(BaseSettings):
     Lower precision = faster inference, less memory, slightly lower quality.
     """
 
-    supported_features: List[str] = ["tools", "json_mode", "streaming"]
+    supported_features: list[str] = ["tools", "json_mode", "streaming"]
     """
     Capabilities exposed to OpenRouter.
 
@@ -247,7 +247,7 @@ class Settings(BaseSettings):
     )
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Get cached settings instance.

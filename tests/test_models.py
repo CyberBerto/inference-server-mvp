@@ -5,27 +5,28 @@ These tests verify that the request/response models properly validate
 input and serialize output according to OpenAI API specifications.
 """
 
+import os
+import sys
+
 import pytest
 from pydantic import ValidationError
 
-import sys
-import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from models import (
-    Message,
-    ToolFunction,
-    Tool,
-    ResponseFormat,
-    ChatCompletionRequest,
-    UsageInfo,
-    Choice,
-    ChatCompletionResponse,
-    DeltaMessage,
-    StreamChoice,
     ChatCompletionChunk,
-    ModelPricing,
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    Choice,
+    DeltaMessage,
+    Message,
     ModelInfo,
+    ModelPricing,
+    ResponseFormat,
+    StreamChoice,
+    Tool,
+    ToolFunction,
+    UsageInfo,
 )
 
 
@@ -68,7 +69,7 @@ class TestMessageModel:
         """Assistant message with tool_calls should be valid."""
         msg = Message(
             role="assistant",
-            tool_calls=[{"id": "call_1", "type": "function", "function": {"name": "test"}}]
+            tool_calls=[{"id": "call_1", "type": "function", "function": {"name": "test"}}],
         )
         assert len(msg.tool_calls) == 1
 
@@ -86,7 +87,7 @@ class TestToolModels:
         func = ToolFunction(
             name="get_weather",
             description="Get weather for a location",
-            parameters={"type": "object", "properties": {"location": {"type": "string"}}}
+            parameters={"type": "object", "properties": {"location": {"type": "string"}}},
         )
         assert func.name == "get_weather"
         assert func.description is not None
@@ -101,10 +102,7 @@ class TestToolModels:
 
     def test_valid_tool(self):
         """Tool with function should be valid."""
-        tool = Tool(
-            type="function",
-            function=ToolFunction(name="test_func")
-        )
+        tool = Tool(type="function", function=ToolFunction(name="test_func"))
         assert tool.type == "function"
         assert tool.function.name == "test_func"
 
@@ -139,18 +137,14 @@ class TestChatCompletionRequest:
     def test_minimal_valid_request(self):
         """Request with model and messages should be valid."""
         req = ChatCompletionRequest(
-            model="test-model",
-            messages=[Message(role="user", content="Hello")]
+            model="test-model", messages=[Message(role="user", content="Hello")]
         )
         assert req.model == "test-model"
         assert len(req.messages) == 1
 
     def test_default_values(self):
         """Default values should be set correctly."""
-        req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")]
-        )
+        req = ChatCompletionRequest(model="test", messages=[Message(role="user", content="test")])
         assert req.max_tokens == 4096
         assert req.temperature == 0.7
         assert req.top_p == 1.0
@@ -159,16 +153,12 @@ class TestChatCompletionRequest:
     def test_temperature_valid_range(self):
         """Temperature within 0-2 should be valid."""
         req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")],
-            temperature=0.0
+            model="test", messages=[Message(role="user", content="test")], temperature=0.0
         )
         assert req.temperature == 0.0
 
         req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")],
-            temperature=2.0
+            model="test", messages=[Message(role="user", content="test")], temperature=2.0
         )
         assert req.temperature == 2.0
 
@@ -176,33 +166,25 @@ class TestChatCompletionRequest:
         """Temperature below 0 should raise ValidationError."""
         with pytest.raises(ValidationError):
             ChatCompletionRequest(
-                model="test",
-                messages=[Message(role="user", content="test")],
-                temperature=-0.1
+                model="test", messages=[Message(role="user", content="test")], temperature=-0.1
             )
 
     def test_temperature_above_range_rejected(self):
         """Temperature above 2 should raise ValidationError."""
         with pytest.raises(ValidationError):
             ChatCompletionRequest(
-                model="test",
-                messages=[Message(role="user", content="test")],
-                temperature=2.1
+                model="test", messages=[Message(role="user", content="test")], temperature=2.1
             )
 
     def test_max_tokens_valid_range(self):
         """max_tokens within range should be valid."""
         req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")],
-            max_tokens=1
+            model="test", messages=[Message(role="user", content="test")], max_tokens=1
         )
         assert req.max_tokens == 1
 
         req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")],
-            max_tokens=131072
+            model="test", messages=[Message(role="user", content="test")], max_tokens=131072
         )
         assert req.max_tokens == 131072
 
@@ -210,33 +192,25 @@ class TestChatCompletionRequest:
         """max_tokens of 0 should raise ValidationError."""
         with pytest.raises(ValidationError):
             ChatCompletionRequest(
-                model="test",
-                messages=[Message(role="user", content="test")],
-                max_tokens=0
+                model="test", messages=[Message(role="user", content="test")], max_tokens=0
             )
 
     def test_max_tokens_exceeds_limit_rejected(self):
         """max_tokens exceeding 131072 should raise ValidationError."""
         with pytest.raises(ValidationError):
             ChatCompletionRequest(
-                model="test",
-                messages=[Message(role="user", content="test")],
-                max_tokens=131073
+                model="test", messages=[Message(role="user", content="test")], max_tokens=131073
             )
 
     def test_top_p_valid_range(self):
         """top_p within 0-1 should be valid."""
         req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")],
-            top_p=0.0
+            model="test", messages=[Message(role="user", content="test")], top_p=0.0
         )
         assert req.top_p == 0.0
 
         req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")],
-            top_p=1.0
+            model="test", messages=[Message(role="user", content="test")], top_p=1.0
         )
         assert req.top_p == 1.0
 
@@ -244,26 +218,20 @@ class TestChatCompletionRequest:
         """top_p outside 0-1 should raise ValidationError."""
         with pytest.raises(ValidationError):
             ChatCompletionRequest(
-                model="test",
-                messages=[Message(role="user", content="test")],
-                top_p=1.1
+                model="test", messages=[Message(role="user", content="test")], top_p=1.1
             )
 
     def test_stop_as_string(self):
         """stop can be a single string."""
         req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")],
-            stop="END"
+            model="test", messages=[Message(role="user", content="test")], stop="END"
         )
         assert req.stop == "END"
 
     def test_stop_as_list(self):
         """stop can be a list of strings."""
         req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")],
-            stop=["END", "STOP"]
+            model="test", messages=[Message(role="user", content="test")], stop=["END", "STOP"]
         )
         assert req.stop == ["END", "STOP"]
 
@@ -272,7 +240,7 @@ class TestChatCompletionRequest:
         req = ChatCompletionRequest(
             model="test",
             messages=[Message(role="user", content="test")],
-            tools=[Tool(function=ToolFunction(name="my_func"))]
+            tools=[Tool(function=ToolFunction(name="my_func"))],
         )
         assert len(req.tools) == 1
 
@@ -281,7 +249,7 @@ class TestChatCompletionRequest:
         req = ChatCompletionRequest(
             model="test",
             messages=[Message(role="user", content="test")],
-            response_format=ResponseFormat(type="json_object")
+            response_format=ResponseFormat(type="json_object"),
         )
         assert req.response_format.type == "json_object"
 
@@ -292,7 +260,7 @@ class TestChatCompletionRequest:
             messages=[Message(role="user", content="test")],
             best_of=3,
             use_beam_search=True,
-            skip_special_tokens=False
+            skip_special_tokens=False,
         )
         assert req.best_of == 3
         assert req.use_beam_search is True
@@ -312,9 +280,7 @@ class TestResponseModels:
     def test_choice(self):
         """Choice should contain message and metadata."""
         choice = Choice(
-            index=0,
-            message=Message(role="assistant", content="Hello!"),
-            finish_reason="stop"
+            index=0, message=Message(role="assistant", content="Hello!"), finish_reason="stop"
         )
         assert choice.index == 0
         assert choice.message.content == "Hello!"
@@ -328,12 +294,10 @@ class TestResponseModels:
             model="test-model",
             choices=[
                 Choice(
-                    index=0,
-                    message=Message(role="assistant", content="Hi!"),
-                    finish_reason="stop"
+                    index=0, message=Message(role="assistant", content="Hi!"), finish_reason="stop"
                 )
             ],
-            usage=UsageInfo(prompt_tokens=5, completion_tokens=2, total_tokens=7)
+            usage=UsageInfo(prompt_tokens=5, completion_tokens=2, total_tokens=7),
         )
         assert response.id == "chatcmpl-123"
         assert response.object == "chat.completion"
@@ -356,11 +320,7 @@ class TestStreamingModels:
 
     def test_stream_choice(self):
         """StreamChoice should contain delta."""
-        choice = StreamChoice(
-            index=0,
-            delta=DeltaMessage(content="Hi"),
-            finish_reason=None
-        )
+        choice = StreamChoice(index=0, delta=DeltaMessage(content="Hi"), finish_reason=None)
         assert choice.delta.content == "Hi"
         assert choice.finish_reason is None
 
@@ -371,12 +331,8 @@ class TestStreamingModels:
             created=1699000000,
             model="test-model",
             choices=[
-                StreamChoice(
-                    index=0,
-                    delta=DeltaMessage(content="Hello"),
-                    finish_reason=None
-                )
-            ]
+                StreamChoice(index=0, delta=DeltaMessage(content="Hello"), finish_reason=None)
+            ],
         )
         assert chunk.object == "chat.completion.chunk"
         assert chunk.choices[0].delta.content == "Hello"
@@ -401,7 +357,7 @@ class TestModelInfoModels:
             context_length=128000,
             pricing=ModelPricing(prompt="0.000008", completion="0.000024"),
             quantization="fp16",
-            supported_features=["streaming", "tools"]
+            supported_features=["streaming", "tools"],
         )
         assert info.id == "org/model"
         assert info.object == "model"
@@ -422,9 +378,7 @@ class TestModelSerialization:
     def test_request_to_dict(self):
         """ChatCompletionRequest should serialize correctly."""
         req = ChatCompletionRequest(
-            model="test",
-            messages=[Message(role="user", content="test")],
-            temperature=0.5
+            model="test", messages=[Message(role="user", content="test")], temperature=0.5
         )
         data = req.model_dump()
         assert data["model"] == "test"
@@ -439,11 +393,9 @@ class TestModelSerialization:
             model="test-model",
             choices=[
                 Choice(
-                    index=0,
-                    message=Message(role="assistant", content="Hi"),
-                    finish_reason="stop"
+                    index=0, message=Message(role="assistant", content="Hi"), finish_reason="stop"
                 )
-            ]
+            ],
         )
         data = response.model_dump()
         assert data["id"] == "test-id"

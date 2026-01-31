@@ -5,7 +5,6 @@ These tests verify that the API responses match OpenRouter's expected format.
 Reference: https://openrouter.ai/docs
 """
 
-import pytest
 import json
 
 

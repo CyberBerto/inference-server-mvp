@@ -2,15 +2,16 @@
 Tests for vLLM client.
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-import httpx
-
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import httpx
+import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from vllm_client import VLLMClient, MockVLLMClient
+from vllm_client import MockVLLMClient, VLLMClient
 
 
 class TestMockVLLMClient:

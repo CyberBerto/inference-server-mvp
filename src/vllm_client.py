@@ -46,7 +46,8 @@ License: MIT
 
 import asyncio
 import json
-from typing import List, Dict, Any, Optional, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 import httpx
 
@@ -100,7 +101,7 @@ class VLLMClient:
         """
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:
         """
@@ -169,14 +170,14 @@ class VLLMClient:
 
     async def generate(
         self,
-        messages: List[Dict[str, Any]],
+        messages: list[dict[str, Any]],
         model: str,
-        max_tokens: Optional[int] = 4096,
-        temperature: Optional[float] = 0.7,
-        top_p: Optional[float] = 1.0,
-        stop: Optional[List[str]] = None,
+        max_tokens: int | None = 4096,
+        temperature: float | None = 0.7,
+        top_p: float | None = 1.0,
+        stop: list[str] | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate a non-streaming chat completion.
 
@@ -220,12 +221,9 @@ class VLLMClient:
 
         # Build request payload
         # Handle both Pydantic models and plain dicts for messages
-        payload = {
+        payload: dict[str, Any] = {
             "model": model,
-            "messages": [
-                m.model_dump() if hasattr(m, 'model_dump') else m
-                for m in messages
-            ],
+            "messages": [m.model_dump() if hasattr(m, "model_dump") else m for m in messages],
             "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
@@ -256,15 +254,15 @@ class VLLMClient:
 
     async def generate_stream(
         self,
-        messages: List[Dict[str, Any]],
+        messages: list[dict[str, Any]],
         model: str,
-        max_tokens: Optional[int] = 4096,
-        temperature: Optional[float] = 0.7,
-        top_p: Optional[float] = 1.0,
-        stop: Optional[List[str]] = None,
+        max_tokens: int | None = 4096,
+        temperature: float | None = 0.7,
+        top_p: float | None = 1.0,
+        stop: list[str] | None = None,
         keep_alive_interval: float = 15.0,
         **kwargs,
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """
         Generate a streaming chat completion.
 
@@ -313,12 +311,9 @@ class VLLMClient:
         client = await self._get_client()
 
         # Build streaming request payload
-        payload = {
+        payload: dict[str, Any] = {
             "model": model,
-            "messages": [
-                m.model_dump() if hasattr(m, 'model_dump') else m
-                for m in messages
-            ],
+            "messages": [m.model_dump() if hasattr(m, "model_dump") else m for m in messages],
             "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
@@ -410,10 +405,14 @@ class MockVLLMClient(VLLMClient):
 
     async def generate(
         self,
-        messages: List[Dict[str, Any]],
+        messages: list[dict[str, Any]],
         model: str,
-        **kwargs
-    ) -> Dict[str, Any]:
+        max_tokens: int | None = 4096,
+        temperature: float | None = 0.7,
+        top_p: float | None = 1.0,
+        stop: list[str] | None = None,
+        **kwargs,
+    ) -> dict[str, Any]:
         """
         Generate a mock response echoing the user's message.
 
@@ -423,6 +422,10 @@ class MockVLLMClient(VLLMClient):
         Args:
             messages: List of chat messages
             model: Model identifier (ignored)
+            max_tokens: Ignored in mock
+            temperature: Ignored in mock
+            top_p: Ignored in mock
+            stop: Ignored in mock
             **kwargs: Additional parameters (ignored)
 
         Returns:
@@ -433,13 +436,18 @@ class MockVLLMClient(VLLMClient):
                 - completion_tokens: word count of content
                 - total_tokens: prompt + completion
         """
+        # Silence unused parameter warnings
+        _ = (max_tokens, temperature, top_p, stop)
+
         # Find the last user message
         # Handle both Pydantic models and plain dicts
-        def get_role(m):
-            return m.role if hasattr(m, 'role') else m.get("role")
+        def get_role(m: Any) -> str | None:
+            role = m.role if hasattr(m, "role") else m.get("role")
+            return str(role) if role is not None else None
 
-        def get_content(m):
-            return m.content if hasattr(m, 'content') else m.get("content", "")
+        def get_content(m: Any) -> str:
+            content = m.content if hasattr(m, "content") else m.get("content", "")
+            return str(content) if content else ""
 
         last_user = next(
             (m for m in reversed(messages) if get_role(m) == "user"),
@@ -458,10 +466,15 @@ class MockVLLMClient(VLLMClient):
 
     async def generate_stream(
         self,
-        messages: List[Dict[str, Any]],
+        messages: list[dict[str, Any]],
         model: str,
-        **kwargs
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+        max_tokens: int | None = 4096,
+        temperature: float | None = 0.7,
+        top_p: float | None = 1.0,
+        stop: list[str] | None = None,
+        keep_alive_interval: float = 15.0,
+        **kwargs,
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """
         Generate a mock streaming response.
 
@@ -471,6 +484,11 @@ class MockVLLMClient(VLLMClient):
         Args:
             messages: List of chat messages
             model: Model identifier (ignored)
+            max_tokens: Ignored in mock
+            temperature: Ignored in mock
+            top_p: Ignored in mock
+            stop: Ignored in mock
+            keep_alive_interval: Ignored in mock
             **kwargs: Additional parameters (ignored)
 
         Yields:
@@ -479,6 +497,9 @@ class MockVLLMClient(VLLMClient):
                 - finish_reason: "stop" on last word, None otherwise
                 - keep_alive: False (no keep-alive needed for mock)
         """
+        # Silence unused parameter warnings
+        _ = (max_tokens, temperature, top_p, stop, keep_alive_interval)
+
         response = await self.generate(messages, model, **kwargs)
         words = response["content"].split()
 
