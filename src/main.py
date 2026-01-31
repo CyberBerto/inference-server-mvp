@@ -26,7 +26,7 @@ Security Considerations:
     - Request counting uses simple integers; not atomic. For high-concurrency
       production, consider using thread-safe counters or external metrics.
 
-Version: 0.2.0
+Version: 0.3.0
 License: MIT
 """
 
@@ -115,7 +115,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Inference Server MVP",
     description="OpenRouter-compatible inference API with vLLM + LMCache",
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
     # OpenAPI docs available at /docs (Swagger) and /redoc
     docs_url="/docs",

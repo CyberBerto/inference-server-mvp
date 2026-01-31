@@ -40,7 +40,7 @@ Upstream References:
     - vLLM: https://github.com/vllm-project/vllm
     - LMCache: https://github.com/LMCache/LMCache
 
-Version: 0.2.0
+Version: 0.3.0
 License: MIT
 """
 
@@ -434,11 +434,19 @@ class MockVLLMClient(VLLMClient):
                 - total_tokens: prompt + completion
         """
         # Find the last user message
+        # Handle both Pydantic models and plain dicts
+        def get_role(m):
+            return m.role if hasattr(m, 'role') else m.get("role")
+
+        def get_content(m):
+            return m.content if hasattr(m, 'content') else m.get("content", "")
+
         last_user = next(
-            (m for m in reversed(messages) if m.get("role") == "user"),
+            (m for m in reversed(messages) if get_role(m) == "user"),
             {"content": "Hello!"},
         )
-        content = f"Mock response to: {last_user.get('content', '')[:50]}"
+        user_content = get_content(last_user) or ""
+        content = f"Mock response to: {user_content[:50]}"
 
         return {
             "content": content,

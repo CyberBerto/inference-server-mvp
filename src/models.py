@@ -23,7 +23,7 @@ vLLM Extensions:
     - use_beam_search: Enable beam search decoding
     - skip_special_tokens: Filter special tokens from output
 
-Version: 0.2.0
+Version: 0.3.0
 License: MIT
 """
 

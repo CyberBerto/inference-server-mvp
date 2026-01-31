@@ -24,13 +24,13 @@ Caching:
     get_settings() is cached with lru_cache, so settings are loaded once
     and reused. To reload settings, call get_settings.cache_clear() first.
 
-Version: 0.2.0
+Version: 0.3.0
 License: MIT
 """
 
 from functools import lru_cache
 from typing import List
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -240,22 +240,11 @@ class Settings(BaseSettings):
     # =========================================================================
     # Pydantic Settings Configuration
     # =========================================================================
-    class Config:
-        """Pydantic settings configuration."""
-
-        env_file = ".env"
-        """Load settings from .env file if present."""
-
-        env_file_encoding = "utf-8"
-        """Encoding for .env file."""
-
-        extra = "ignore"
-        """
-        Ignore unknown environment variables.
-
-        This prevents errors when extra vars are set in .env
-        that aren't defined in Settings.
-        """
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",  # Ignore unknown env vars
+    )
 
 
 @lru_cache()
