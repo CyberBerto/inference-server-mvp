@@ -20,6 +20,9 @@ dist/
 htmlcov/
 coverage.xml
 
+# Type checking
+.mypy_cache/
+
 # IDE
 .idea/
 .vscode/
