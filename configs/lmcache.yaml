@@ -1,0 +1,24 @@
+# LMCache Configuration for KV Cache Offloading
+# Upstream: https://github.com/LMCache/LMCache
+#
+# This config enables CPU RAM offloading for 100K+ context windows
+# on a single H100 80GB GPU.
+
+# Chunk size in tokens - smaller = more granular caching
+chunk_size: 256
+
+# CPU RAM offloading (primary tier)
+local_cpu: true
+max_local_cpu_size: 64  # GB - adjust based on available RAM
+
+# NVMe offloading (secondary tier, enable for larger contexts)
+local_disk: false
+# max_local_disk_size: 200  # GB - uncomment if using NVMe tier
+# local_disk_path: /tmp/lmcache  # Path for disk cache
+
+# Remote caching (for multi-node setups)
+# remote_url: null
+# remote_serde: cachegen
+
+# Performance tuning
+# pipelined_backend: false  # Enable for async I/O

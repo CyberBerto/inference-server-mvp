@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+
+# Distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Environment
+.env
+.env.local
+*.local
+
+# Docker
+.docker/
+
+# Logs
+*.log
+logs/
+
+# Model cache (large files)
+*.bin
+*.safetensors
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db

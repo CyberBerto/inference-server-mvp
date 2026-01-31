@@ -1,0 +1,23 @@
+# Development override - runs without GPU using mock client
+# Usage: docker-compose -f docker-compose.yaml -f docker-compose.dev.yaml up
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - VLLM_BASE_URL=http://localhost:8080  # Will use mock client
+      - DEBUG=true
+    volumes:
+      - ./src:/app/src:ro  # Hot reload
+    command: >
+      python -m uvicorn src.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+
+  # Disable vLLM for CPU development
+  vllm:
+    profiles:
+      - gpu  # Only starts with --profile gpu

@@ -1,0 +1,23 @@
+# vLLM Server Arguments
+# Reference: https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html
+#
+# Use with: vllm serve <model> $(cat configs/vllm_args.yaml | tr '\n' ' ')
+
+# Model configuration
+--max-model-len: 131072          # 128K context
+--gpu-memory-utilization: 0.90   # Leave headroom for KV cache
+--max-num-seqs: 64               # Max concurrent sequences
+--max-num-batched-tokens: 32768  # Batch size for prefill
+
+# Performance optimizations
+--enable-chunked-prefill: true   # Required for long contexts
+--enable-prefix-caching: true    # Cache common prefixes
+
+# LMCache KV offloading (if LMCACHE_CONFIG_FILE is set)
+# --kv-transfer-config: '{"kv_connector":"LMCacheConnectorV1","kv_role":"kv_both"}'
+
+# Quantization (optional - uncomment for FP8)
+# --quantization: fp8
+
+# Tensor parallelism (for multi-GPU)
+# --tensor-parallel-size: 2

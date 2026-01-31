@@ -1,0 +1,61 @@
+# Docker Compose for local development
+# Production: Use RunPod templates or Kubernetes
+#
+# Usage:
+#   docker-compose up -d
+#   curl http://localhost:8000/health
+
+services:
+  # FastAPI wrapper (runs on CPU)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - VLLM_BASE_URL=http://vllm:8080
+      - MODEL_ID=your-org/your-model
+      - MODEL_DISPLAY_NAME=Your Model
+    env_file:
+      - .env
+    depends_on:
+      vllm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # vLLM backend (requires GPU)
+  # Comment out for CPU-only development with mock client
+  vllm:
+    build:
+      context: .
+      dockerfile: Dockerfile.vllm
+      args:
+        MODEL_NAME: ${MODEL_NAME:-meta-llama/Llama-3.1-8B-Instruct}
+    ports:
+      - "8080:8080"
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    volumes:
+      - ./configs:/app/configs:ro
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s  # Model loading takes time
+      retries: 5
+
+# For development without GPU, use this override:
+# docker-compose -f docker-compose.yaml -f docker-compose.dev.yaml up
